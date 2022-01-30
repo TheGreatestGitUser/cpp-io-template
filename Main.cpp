@@ -1,5 +1,7 @@
-//https://www.ibm.com/docs/en/xl-c-and-cpp-aix/13.1.0?topic=reference-standard-library-header-files has a list of useful imports
+//https://www.ibm.com/docs/en/xl-c-and-cpp-aix/13.1.0?topic=reference-standard-library-header-files
+// has a list of useful imports
 
+// Random links that will be used in the future for upgrades
 //https://codeforces.com/blog/entry/8080
 //https://codeforces.com/blog/entry/5217
 //https://stackoverflow.com/questions/44108745/how-to-optimize-printing-out-the-difference-between-the-greater-and-the-lesser-o
@@ -187,9 +189,12 @@ long long fastscan(long long &x) {
 }
 */
 
-//https://stackoverflow.com/questions/1924530/mixing-cout-and-printf-for-faster-output (this is the original StackOverflow answer, so the other links are not needed)
+//https://stackoverflow.com/questions/1924530/mixing-cout-and-printf-for-faster-output
+// ^ this is the original StackOverflow answer, so the other links are not needed
+
 //https://softwareengineering.stackexchange.com/questions/386269/why-do-you-want-to-avoid-flushing-stdout
-//https://www.generacodice.com/en/articolo/399513/mixing-cout-and-printf-for-faster-output (doesn't work though)
+//https://www.generacodice.com/en/articolo/399513/mixing-cout-and-printf-for-faster-output
+// ^ this link doesn't work though
 //https://stackify.dev/793050-mixing-cout-and-printf-for-faster-output
 
 void write (string s){
