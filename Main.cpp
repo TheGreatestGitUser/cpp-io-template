@@ -22,23 +22,40 @@
 #include <algorithm>
 #include <vector>
 #include <array>
-#include <float.h>
+#include <cfloat>
 #include <numeric>
 using namespace std;
-//#define scan(x) do{while((x=getchar())<'0'); for(x-='0'; '0'<=(_=getchar()); x=(x<<3)+(x<<1)+_-'0');}while(0) // This one isn't needed
-#define nextInteger(x) do{ bool neg = false; register int c; x = 0; while (c < 33) c = getchar_unlocked(); if (c=='-') { neg = true; c = getchar_unlocked(); } for (; (c>47 && c<58); c=getchar_unlocked()) { x = x * 10 + c - 48; } if (neg){ x *= -1; } } while (0) // This one is used for integers
-//#define nextInteger(x) do{ bool neg = false; register int c; x = 0; c = get(); if (c=='-') { neg = true; c = get(); } for (; (c>47 && c<58); c=get()) { x = x * 10 + c - 48; } if (neg){ x *= -1; } } while (0) // This one is used for integers
-#define nextDecimal(x) do{ double div = 1; bool neg = false; register int c = getchar_unlocked(); x = 0; while (c < 33) c = getchar_unlocked(); if (c=='-') { neg = true; c = getchar_unlocked(); } for (; (c>47 && c<58); c=getchar_unlocked()) { x = x * 10 + c - 48; } if (c=='.') { c=getchar_unlocked(); for (; (c>47 && c<58); c=getchar_unlocked()) { x += (c - '0') / (div *= 10); } } if (neg){ x *= -1; } } while (0) // This one is used for decimals, but doesn't work, so comment out later.
-//#define nextDecimal(x) do{ double div = 1; bool neg = false; register int c = get(); x = 0; while (c < 33) c = get(); if (c=='-') { neg = true; c = get(); } for (; (c>47 && c<58); c=get()) { x = x * 10 + c - 48; } if (c=='.')
-#define next(x) do{ register char c = getchar_unlocked(); while (c < 33) c = getchar_unlocked(); os.str(""); while (c > 32){ os << c; c = getchar_unlocked(); } x = os.str(); } while (0) // This one is used for the next token in stdin
-//#define next(x) cin >> x;
-#define nextLine(x) do{ register char c = getchar_unlocked(); while (c < 11) c = getchar_unlocked(); os.str(""); while (c > 10){ os << c; c = getchar_unlocked(); } x = os.str(); } while (0) // This one is used for the next line in stdin
-//#define nextLine(x) getline(cin, x);
-//#define nextDecimal(x) do{ string s; next(s); x = stold(s); } while (0)
+
+#if defined(_WINDOWS) // On Windows GCC, use the slow thread safe version
+inline int fread_unlocked() {
+    return fread();
+}
+inline int fwrite_unlocked() {
+    return fwrite();
+}
+#elif defined  (_MSC_VER)// On Visual Studio
+inline int fread_unlocked(){
+    return _fread_nolock(); // use Microsoft Thread unsafe version
+}
+inline int fwrite_unlocked() {
+    return _fwrite_nolock();
+}
+#endif
+
+//https://tinodidriksen.com/2010/02/cpp-convert-string-to-int-speed/ has some very interesting findings in C++
+
 //https://stackoverflow.com/questions/3203452/how-to-read-entire-stream-into-a-stdstring
 //^this link can be used if you want to read the entire stream into a string.
 
-char _;
+//https://stackoverflow.com/questions/1924530/mixing-cout-and-printf-for-faster-output
+// ^ this is the original StackOverflow answer, so the other links are not needed
+
+//https://softwareengineering.stackexchange.com/questions/386269/why-do-you-want-to-avoid-flushing-stdout
+//https://www.generacodice.com/en/articolo/399513/mixing-cout-and-printf-for-faster-output
+// ^ this link doesn't work though
+//https://stackify.dev/793050-mixing-cout-and-printf-for-faster-output
+
+
 //https://stackoverflow.com/questions/1637332/static-const-vs-define
 #define INF 0x3f3f3f3f
 #define NINF -INF
@@ -56,175 +73,357 @@ typedef long long ll;
 typedef pair<ll, ll> pll;
 // cannot use scanf with this template
 
-#if defined(_WINDOWS) // On Windows GCC, use the slow thread safe version
-inline int getchar_unlocked() {
-    return getchar();
-}
-#elif defined  (_MSC_VER)// On   Visual Studio
-inline int getchar_unlocked(){
-    return _getchar_nolock(); // use Microsoft Thread unsafe version
-}
-#endif
-
-// Add support for files and tokenizing individual lines of text
-
-ostringstream os;
-
-vector<string> st(string s, string delimiters = " "){
-    vector <string> tokens;
-    size_t current;
-    size_t next = -1;
-    do {
-        current = next + 1;
-        next = s.find_first_of(delimiters, current);
-        tokens.push_back(s.substr(current, next - current));
+// Template is mostly from https://usaco.guide/general/fast-io?lang=cpp
+const int BUF_SZ = 1 << 15;
+inline namespace Input {
+    char buf[BUF_SZ];
+    int pos;
+    int len;
+    char next_char() {
+    	if (pos == len) {
+    		pos = 0;
+    		len = int(fread_unlocked(buf, 1, BUF_SZ, stdin));
+    		if (!len) {
+    			return EOF;
+    		}
+    	}
+    	return buf[pos++];
     }
-    while (next != string::npos);
-    return tokens;
-      
-}
-
-
-/*
-long double fastscan(long double &x) {
-    do{
-        string s;
-        next(s);
-        x = stold(s);
-        return x;
-    } while (0);
-}
-*/
-
-/*
-string fastscan(string &x) {
-    do{
-        register char c = getchar();
-        while (c < 11){
-            c = getchar();
-            
+    
+    long long read_int() {
+    	long long x;
+    	register char ch;
+    	int sgn = 1;
+    	while (!isdigit(ch = next_char())) {
+    		if (ch == '-') {
+    			sgn *= -1;
+    		}
+    	}
+    	x = ch - '0';
+    	while (isdigit(ch = next_char())) {
+    		x = (x * 10) + (ch - '0');
+    	}
+    	return x * sgn;
+    }
+    
+    /*
+    int fast_atoi( const char * str ) {
+        int val = 0;
+        while( *str ) {
+            val = val*10 + (*str++ - '0');
         }
-        os.str("");
-        while (c > 10){
-            os << c;
-            c = getchar();
-        }
-        x = os.str();
-        return x;
-    } while (0);
-}
-*/
-
-/*
-string fastscan(string &x) {
-    do{
-        register char c = getchar();
-        while (c < 33){
-            c = getchar();
-        }
-        os.str("");
-        while (c > 32){
-            os << c;
-            c = getchar();
-        }
-        x = os.str();
-        return x;   
-    } while (0);
-}
-*/
-
-
-/*
-double fastscan(double &x) {
-    do{
-        double div = 1;
-        bool neg = false;
-        register int c = getchar();
-        
-        x = 0;
-        while (c < 33) c = getchar();
-        if (c=='-') {
-            neg = true;
-            c = getchar();
-        }
-        
-        for (; (c>47 && c<58); c=getchar()) {
-            x = x * 10 + c - 48;
-        }
-        
-        if (c=='.') {
-            c=getchar();
-            for (; (c>47 && c<58); c=getchar()) {
-                x += (c - '0') / (div *= 10);
+        return val;
+    }
+    */
+    
+    // lots of the code used in the read_double() function
+    // was taken from here: https://tinodidriksen.com/uploads/code/cpp/speed-string-to-double.cpp
+    long double read_double() {
+    	long double x;
+    	register char ch;
+    	int sgn = 1;
+    	while (!isdigit(ch = next_char())) {
+    		if (ch == '-') {
+    			sgn *= -1;
+    		}
+    	}
+    	x = ch - '0';
+    	while (isdigit(ch = next_char())) {
+    		x = (x * 10) + (ch - '0');
+    	}
+    	if (ch == '.'){
+    	    /*
+    	    long double divisor = 1;
+    		while (isdigit(ch = next_char())) {
+    			x += (ch - '0') / (divisor *= 10);
+    		}
+    		*/
+    		
+    		// from https://tinodidriksen.com/uploads/code/cpp/speed-string-to-double.cpp
+            long double f = 0.0;
+            int n = 0;
+            while (isdigit(ch = next_char())) {
+                f = (f * 10.0) + (ch - '0');
+                ++n;
             }
+            x += f / pow(10.0, n);
+    	}
+    	return x * sgn;
+    }
+    
+    // https://stackoverflow.com/questions/18892281/most-optimized-way-of-concatenation-in-strings/18892355
+    // the above link was used to find the quickest way of adding characters to a string.
+    
+    // https://stackoverflow.com/questions/6283632/how-to-know-if-the-next-character-is-eof-in-c
+    // the above link was used to find when the end-of-file is for standard input.
+    string read(char delim) {
+		register char ch = next_char();
+    	while (ch == delim) ch = next_char();
+    	string out;
+    	while (ch != delim){
+    		out += ch;
+    		if ((ch = next_char()) == EOF) break;
+    	}
+    	return out; 
+    }
+    
+    // https://stackoverflow.com/questions/4754011/c-string-to-double-conversion
+    // the above link was used to find how to convert a string to a long double
+    long double read_double_exact() {
+    	return stold(read(' '));
+    }
+    vector<string> st(string s, string delimiters = " "){
+        vector <string> tokens;
+        size_t current;
+        size_t next = -1;
+        do {
+            current = next + 1;
+            next = s.find_first_of(delimiters, current);
+            tokens.push_back(s.substr(current, next - current));
         }
+        while (next != string::npos);
+        return tokens;
+    }
+} // namespace Input
+
+inline namespace Output {
+    char buf[BUF_SZ];
+    int pos;
+    
+    void flush_out() {
+    	fwrite_unlocked(buf, 1, pos, stdout);
+    	pos = 0;
+    }
+    
+    void write_char(char c) {
+    	if (pos == BUF_SZ) flush_out();
+    	buf[pos++] = c;
+    }
+    
+    
+    void write_int(long long x) {
+    	static char num_buf[100];
+    	if (x < 0) {
+    		write_char('-');
+    		x *= -1;
+    	}
+    	int len = 0;
+    	for (; x >= 10; x /= 10) {
+    		num_buf[len++] = (char)('0' + (x % 10));
+    	}
+    	write_char((char)('0' + x));
+    	while (len) {
+    		write_char(num_buf[--len]);
+    	}
+    	write_char('\n');
+    }
+    
+    // The code below for the function write_int_2() came from here:
+    // https://stackoverflow.com/questions/18006748/using-putchar-unlocked-for-fast-output
+    // However I am not using it because it is slower than the write_int() function above.
+    /*
+    void write_int_2(long long n) {
+        if (n < 0) { write_char('-'); n *= -1; }
+        long long N = n, rev, count = 0;
+        rev = N;
+        if (N == 0) { write_char('0'); write_char('\n'); return ;}
+        while ((rev % 10) == 0) { count++; rev /= 10;} //obtain the count of the number of 0s
+        rev = 0;
+        while (N != 0) { rev = (rev<<3) + (rev<<1) + N % 10; N /= 10;}  //store reverse of N in rev
+        while (rev != 0) { write_char(rev % 10 + '0'); rev /= 10;}
+        while (count--) write_char('0');
+        write_char('\n');
+    }
+    */
+    
+    void write(string s) {
+        int len = s.length();
+    	for (int i =0; i < len; ++i) {
+    		write_char(s[i]);
+    	}
+    	write_char('\n');
+    }
+    
+    /*
+    This code isn't needed since the current write_double() function
+    works similarily as it prints out the decimal places using write().
+    
+    // https://stackoverflow.com/questions/332111/how-do-i-convert-a-double-into-a-string-in-c
+    // the above link was used to figure out how to convert a double to a string.
+    void write_double_exact(long double x) {
+        write(to_string(x));
+    }
+    */
+    
+    // the code for the round() function was based around the code in this link:
+    // https://stackoverflow.com/questions/12349323/setting-the-precision-of-a-double-without-using-stream-ios-baseprecision
+    long double round(long double num, long long decimals = 1) {
+        if (decimals < 1) throw invalid_argument("no decimal digits less than 1");
+        return ((long long) ((num * pow(10.0, decimals)) + 0.5)) / pow(10.0, decimals);
+    }
+    
+    // the code for the dmod() function was taken from here:
+    // https://stackoverflow.com/questions/9138790/cant-use-modulus-on-doubles
+    // This might not be needed thought because of fmod()
+    long double dmod(long double x, long double y) {
+        return x - int(x/y) * y;
+    }
+    
+    void write_double(long double x) {
+        static char num_buf[100];
+    	if (x < 0) {
+    		write_char('-');
+    		x *= -1;
+    	}
+        long double decimals = dmod(x, 1.0);
+        long long beforeDecimalPoint = (long long) double(x - decimals);
+    	int len = 0;
+    	for (; beforeDecimalPoint >= 10; beforeDecimalPoint /= 10) {
+    		num_buf[len++] = (char)('0' + (beforeDecimalPoint % 10));
+    	}
+    	write_char((char)('0' + beforeDecimalPoint));
+    	while (len) {
+    		write_char(num_buf[--len]);
+    	}
+        string actualDecimals = to_string(decimals);
         
-        if (neg){
-            x *= -1;
+        // These two lines of code were taken from here:
+        // https://stackoverflow.com/questions/13686482/c11-stdto-stringdouble-no-trailing-zeros
+        actualDecimals.erase(actualDecimals.find_last_not_of('0') + 1, string::npos);
+        actualDecimals.erase(actualDecimals.find_last_not_of('.') + 1, string::npos);
+        write(actualDecimals.substr(1));
+    }
+    
+    /*
+    The following code is for quickly printing out double values.
+    However, I cannot figure out how to write the decimal values
+    directly to the num_buf array, which might cost me some time.
+    Furthermore, the accuracy of the output is off, such as
+    how trying to print -100.07 will end up printing:
+    -100.069999999999999999722444243843710864894092082977294921875
+    As a result of this, the current write_double() function is
+    good enough.
+    
+    void write_double_2(long double x) {
+    	static char num_buf[100];
+    	if (x < 0) {
+    		write_char('-');
+    		x *= -1;
+    	}
+    	long double decimals = dmod(x, 1.0);
+    	long long beforeDecimalPoint = (long long) double(x - decimals);
+    	int len = 0;
+    	for (; beforeDecimalPoint >= 10; beforeDecimalPoint /= 10) {
+    		num_buf[len++] = (char)('0' + (beforeDecimalPoint % 10));
+    	}
+    	//cout << beforeDecimalPoint << '\n';
+        write_char((char)('0' + beforeDecimalPoint));
+    	while (len) {
+    		write_char(num_buf[--len]);
+    	}
+    	if (decimals > 0.0) {
+    	    write_char('.');
+    	    while (decimals > 0.0){
+    	        decimals *= 10;
+    	        write_char((char)('0' + int(decimals)));
+    	        decimals = dmod(decimals, 1.0);
+    	        //cout << decimals << '\n';
+    	    }
         }
-        return x;
-    } while (0);
-}
-*/
+    	write_char('\n');
+    }
+    */
+    
+    /*
+    Might update the code below so that I can
+    quickly (is it quicker at this point?) print out
+    doubles. I will also have to add comments because
+    the code is very long and unreadable.
+    
+    void write_double(long double x) {
+    	static char num_buf[100];
+    	if (x < 0) {
+    		write_char('-');
+    		x *= -1;
+    	}
+    	double start = x;
+    	if (start == 0) start = 1;
+    	if (x != 0.0 && x - dmod(x, 1.0) == 0.0){
+    	    write_char('0');
+    	    write_char('.');
+    	}
+    	int n = 0;
+    	while (dmod(x, 1.0) != 0.0) {
+    	    x *= 10;
+	        n++;
+	    }
+    	int len = 0;
+    	double temp = floor(log(start));
+    	//cout << start << '\n';
+    	if (temp < 0) temp--;
+    	else temp = 1;
+    	for (; x >= pow(10, temp); x /= 10) {
+    		num_buf[len++] = (char)('0' + dmod(x, 10.0));
+    	}
+    	write_char((char)('0' + x));
+    	while (len) {
+    	    if (len == n) write_char('.');
+    	    write_char(num_buf[--len]);
+    	}
+    	if (n == 0) {
+    	    write_char('.');
+    	    write_char('0');
+    	}
+    	write_char('\n');
+    }
+    */
+    /*
+    May update this code later to provide straight output for doubles.
+    However, for the time being, converting it to a string and printing
+    that doesn't seem so bad.
+    
+    void write_double(long double x) {
+    	static char num_buf[100];
+    	if (x < 0) {
+    		write_char('-');
+    		x *= -1;
+    	}
+    	int len = 0;
+    	for (; x >= 10; x /= 10) {
+    		num_buf[len++] = (char)('0' + dmod(x, 10.0));
+    	}
+    	write_char((char)('0' + x));
+    	x = dmod(x, 1.0);
+    	//cout << x << '\n';
+    	
+    	if (x > 0) {
+    	    num_buf[len++] = '.';
+    	    int n = 0;
+    	    while (dmod(x, 1.0) < 0.0) {
+    	        x *= 10;
+    	        n++;
+    	        
+    	    }
+    	}
+    	while (len) {
+    		write_char(num_buf[--len]);
+    	}
+    	write_char('\n');
+    	    
+	}
+    */
+    
+    // auto-flush output when program exits
+    void init_output() { assert(atexit(flush_out) == 0); }
+} // namespace Output
 
-/*
-long long fastscan(long long &x) {
-   do{
-       bool neg = false;
-       register int c = getchar();
-       
-       x = 0;
-       while (c < 33) c = getchar();
-       if (c=='-') {
-           neg = true;
-           c = getchar();
-       }
-       
-       for (; (c>47 && c<58); c=getchar()) {
-           x = x * 10 + c - 48;
-       }
-       
-       if (neg){
-           x *= -1;
-       }
-       return x;
-   } while (0);
-}
-*/
-
-//https://stackoverflow.com/questions/1924530/mixing-cout-and-printf-for-faster-output
-// ^ this is the original StackOverflow answer, so the other links are not needed
-
-//https://softwareengineering.stackexchange.com/questions/386269/why-do-you-want-to-avoid-flushing-stdout
-//https://www.generacodice.com/en/articolo/399513/mixing-cout-and-printf-for-faster-output
-// ^ this link doesn't work though
-//https://stackify.dev/793050-mixing-cout-and-printf-for-faster-output
-
-void write (string s){
-    puts(s.c_str());
-}
 
 int main() {
-    // These lines might not be needed, but need to test first
     ios_base::sync_with_stdio(0); 
-    cin.tie(NULL);
-    
-    int n;
-    nextInteger(n);
-    write(to_string(n));
-    /*
-    for (int i =0; i < n; ++i){
-        int a, b;
-        nextInteger(a);
-        nextInteger(b);
-        write(to_string(-abs(a-b)));
-    }
-    */
-    
-    /*
-    int x;
-    nextInteger(x);
-    //cout<<setprecision(7)<<fixed;
-    writeInt(x);
-    */
+    cin.tie(0);
+
+	init_output();
+	
+	long double test = read_double();
+	write_double(test);
 }
