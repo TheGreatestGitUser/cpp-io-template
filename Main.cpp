@@ -257,6 +257,9 @@ inline namespace Output {
     
     // the code for the round() function was based around the code in this link:
     // https://stackoverflow.com/questions/12349323/setting-the-precision-of-a-double-without-using-stream-ios-baseprecision
+
+    // this link was used to figure out how to throw exceptions:
+    // https://stackoverflow.com/questions/8480640/how-to-throw-a-c-exception
     long double round(long double num, long long decimals = 1) {
         if (decimals < 1) throw invalid_argument("no decimal digits less than 1");
         return ((long long) ((num * pow(10.0, decimals)) + 0.5)) / pow(10.0, decimals);
