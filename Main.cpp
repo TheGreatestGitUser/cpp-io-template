@@ -12,18 +12,79 @@
 //https://www.cplusplus.com/reference/istream/istream/
 //https://www.cplusplus.com/reference/ostream/ostream/
 
+#include <bits/stdc++.h>
 #include <cstdio>
 #include <cmath>
-#include <bits/stdc++.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <sstream>
-#include <algorithm>
-#include <vector>
 #include <array>
 #include <cfloat>
 #include <numeric>
+#include <locale>
+#include <utility>
+#include <functional>
+#include <memory>
+#include <algorithm>
+#include <bitset>
+#include <deque>
+#include <iterator>
+#include <list>
+#include <map>
+#include <queue>
+#include <set>
+#include <stack>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
+#include <cassert>
+#include <cctype>
+#include <cerrno>
+#include <cfenv>
+#include <cinttypes>
+#include <ciso646>
+#include <climits>
+#include <clocale>
+#include <complex>
+#include <csetjmp>
+#include <csignal>
+#include <cstdarg>
+#include <cstdbool>
+#include <cstddef>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctgmath>
+#include <ctime>
+#include <cwchar>
+#include <cwctype>
+#include <exception>
+#include <fstream>
+#include <functional>
+#include <iomanip>
+#include <ios>
+#include <iosfwd>
+#include <iostream>
+#include <istream>
+#include <iterator>
+#include <limits>
+#include <new>
+#include <ostream>
+#include <random>
+#include <regex>
+#include <stdexcept>
+#include <streambuf>
+#include <strstream>
+#include <tuple>
+#include <typeinfo>
+#include <type_traits>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <valarray>
+
 using namespace std;
 
 #if defined(_WINDOWS) // On Windows GCC, use the slow thread safe version
@@ -73,6 +134,24 @@ typedef long long ll;
 typedef pair<ll, ll> pll;
 // cannot use scanf with this template
 
+    
+// the code for the round() function was based around the code in this link:
+// https://stackoverflow.com/questions/12349323/setting-the-precision-of-a-double-without-using-stream-ios-baseprecision
+
+// this link was used to figure out how to throw exceptions:
+// https://stackoverflow.com/questions/8480640/how-to-throw-a-c-exception
+long double round(long double num, long long decimals = 1) {
+    if (decimals < 1) throw invalid_argument("no decimal digits less than 1");
+    return ((long long) ((num * pow(10.0, decimals)) + 0.5)) / pow(10.0, decimals);
+}
+
+// the code for the dmod() function was taken from here:
+// https://stackoverflow.com/questions/9138790/cant-use-modulus-on-doubles
+// This might not be needed thought because of fmod()
+long double dmod(long double x, long double y) {
+    return x - int(x/y) * y;
+}
+
 // Template is mostly from https://usaco.guide/general/fast-io?lang=cpp
 const int BUF_SZ = 1 << 15;
 inline namespace Input {
@@ -105,16 +184,6 @@ inline namespace Input {
     	}
     	return x * sgn;
     }
-    
-    /*
-    int fast_atoi( const char * str ) {
-        int val = 0;
-        while( *str ) {
-            val = val*10 + (*str++ - '0');
-        }
-        return val;
-    }
-    */
     
     // lots of the code used in the read_double() function
     // was taken from here: https://tinodidriksen.com/uploads/code/cpp/speed-string-to-double.cpp
@@ -184,6 +253,20 @@ inline namespace Input {
         while (next != string::npos);
         return tokens;
     }
+    
+    // the code for the method all_lines() came from this link:
+    // https://stackoverflow.com/questions/3203452/how-to-read-entire-stream-into-a-stdstring
+    
+    // the following link shows that an example of an istream object is cin:
+    // https://stackoverflow.com/questions/60255516/istream-function-to-read-with-istream-parameter
+    string all_lines(istream &in) {
+        string ret;
+        char buffer[4096];
+        while (in.read(buffer, sizeof(buffer)))
+            ret.append(buffer, sizeof(buffer));
+        ret.append(buffer, in.gcount());
+        return ret;
+    }
 } // namespace Input
 
 inline namespace Output {
@@ -199,7 +282,6 @@ inline namespace Output {
     	if (pos == BUF_SZ) flush_out();
     	buf[pos++] = c;
     }
-    
     
     void write_int(long long x) {
     	static char num_buf[100];
@@ -218,58 +300,12 @@ inline namespace Output {
     	write_char('\n');
     }
     
-    // The code below for the function write_int_2() came from here:
-    // https://stackoverflow.com/questions/18006748/using-putchar-unlocked-for-fast-output
-    // However I am not using it because it is slower than the write_int() function above.
-    /*
-    void write_int_2(long long n) {
-        if (n < 0) { write_char('-'); n *= -1; }
-        long long N = n, rev, count = 0;
-        rev = N;
-        if (N == 0) { write_char('0'); write_char('\n'); return ;}
-        while ((rev % 10) == 0) { count++; rev /= 10;} //obtain the count of the number of 0s
-        rev = 0;
-        while (N != 0) { rev = (rev<<3) + (rev<<1) + N % 10; N /= 10;}  //store reverse of N in rev
-        while (rev != 0) { write_char(rev % 10 + '0'); rev /= 10;}
-        while (count--) write_char('0');
-        write_char('\n');
-    }
-    */
-    
     void write(string s) {
         int len = s.length();
     	for (int i =0; i < len; ++i) {
     		write_char(s[i]);
     	}
     	write_char('\n');
-    }
-    
-    /*
-    This code isn't needed since the current write_double() function
-    works similarily as it prints out the decimal places using write().
-    
-    // https://stackoverflow.com/questions/332111/how-do-i-convert-a-double-into-a-string-in-c
-    // the above link was used to figure out how to convert a double to a string.
-    void write_double_exact(long double x) {
-        write(to_string(x));
-    }
-    */
-    
-    // the code for the round() function was based around the code in this link:
-    // https://stackoverflow.com/questions/12349323/setting-the-precision-of-a-double-without-using-stream-ios-baseprecision
-
-    // this link was used to figure out how to throw exceptions:
-    // https://stackoverflow.com/questions/8480640/how-to-throw-a-c-exception
-    long double round(long double num, long long decimals = 1) {
-        if (decimals < 1) throw invalid_argument("no decimal digits less than 1");
-        return ((long long) ((num * pow(10.0, decimals)) + 0.5)) / pow(10.0, decimals);
-    }
-    
-    // the code for the dmod() function was taken from here:
-    // https://stackoverflow.com/questions/9138790/cant-use-modulus-on-doubles
-    // This might not be needed thought because of fmod()
-    long double dmod(long double x, long double y) {
-        return x - int(x/y) * y;
     }
     
     void write_double(long double x) {
@@ -297,136 +333,19 @@ inline namespace Output {
         write(actualDecimals.substr(1));
     }
     
-    /*
-    The following code is for quickly printing out double values.
-    However, I cannot figure out how to write the decimal values
-    directly to the num_buf array, which might cost me some time.
-    Furthermore, the accuracy of the output is off, such as
-    how trying to print -100.07 will end up printing:
-    -100.069999999999999999722444243843710864894092082977294921875
-    As a result of this, the current write_double() function is
-    good enough.
-    
-    void write_double_2(long double x) {
-    	static char num_buf[100];
-    	if (x < 0) {
-    		write_char('-');
-    		x *= -1;
-    	}
-    	long double decimals = dmod(x, 1.0);
-    	long long beforeDecimalPoint = (long long) double(x - decimals);
-    	int len = 0;
-    	for (; beforeDecimalPoint >= 10; beforeDecimalPoint /= 10) {
-    		num_buf[len++] = (char)('0' + (beforeDecimalPoint % 10));
-    	}
-    	//cout << beforeDecimalPoint << '\n';
-        write_char((char)('0' + beforeDecimalPoint));
-    	while (len) {
-    		write_char(num_buf[--len]);
-    	}
-    	if (decimals > 0.0) {
-    	    write_char('.');
-    	    while (decimals > 0.0){
-    	        decimals *= 10;
-    	        write_char((char)('0' + int(decimals)));
-    	        decimals = dmod(decimals, 1.0);
-    	        //cout << decimals << '\n';
-    	    }
-        }
-    	write_char('\n');
-    }
-    */
-    
-    /*
-    Might update the code below so that I can
-    quickly (is it quicker at this point?) print out
-    doubles. I will also have to add comments because
-    the code is very long and unreadable.
-    
-    void write_double(long double x) {
-    	static char num_buf[100];
-    	if (x < 0) {
-    		write_char('-');
-    		x *= -1;
-    	}
-    	double start = x;
-    	if (start == 0) start = 1;
-    	if (x != 0.0 && x - dmod(x, 1.0) == 0.0){
-    	    write_char('0');
-    	    write_char('.');
-    	}
-    	int n = 0;
-    	while (dmod(x, 1.0) != 0.0) {
-    	    x *= 10;
-	        n++;
-	    }
-    	int len = 0;
-    	double temp = floor(log(start));
-    	//cout << start << '\n';
-    	if (temp < 0) temp--;
-    	else temp = 1;
-    	for (; x >= pow(10, temp); x /= 10) {
-    		num_buf[len++] = (char)('0' + dmod(x, 10.0));
-    	}
-    	write_char((char)('0' + x));
-    	while (len) {
-    	    if (len == n) write_char('.');
-    	    write_char(num_buf[--len]);
-    	}
-    	if (n == 0) {
-    	    write_char('.');
-    	    write_char('0');
-    	}
-    	write_char('\n');
-    }
-    */
-    /*
-    May update this code later to provide straight output for doubles.
-    However, for the time being, converting it to a string and printing
-    that doesn't seem so bad.
-    
-    void write_double(long double x) {
-    	static char num_buf[100];
-    	if (x < 0) {
-    		write_char('-');
-    		x *= -1;
-    	}
-    	int len = 0;
-    	for (; x >= 10; x /= 10) {
-    		num_buf[len++] = (char)('0' + dmod(x, 10.0));
-    	}
-    	write_char((char)('0' + x));
-    	x = dmod(x, 1.0);
-    	//cout << x << '\n';
-    	
-    	if (x > 0) {
-    	    num_buf[len++] = '.';
-    	    int n = 0;
-    	    while (dmod(x, 1.0) < 0.0) {
-    	        x *= 10;
-    	        n++;
-    	        
-    	    }
-    	}
-    	while (len) {
-    		write_char(num_buf[--len]);
-    	}
-    	write_char('\n');
-    	    
-	}
-    */
-    
     // auto-flush output when program exits
     void init_output() { assert(atexit(flush_out) == 0); }
 } // namespace Output
 
 
 int main() {
-    ios_base::sync_with_stdio(0); 
+    ios_base::sync_with_stdio(0);
+    cin.sync_with_stdio(0);
     cin.tie(0);
 
 	init_output();
 	
-	long double test = read_double();
-	write_double(test);
+    double n = read_double();
+    n = round(n, 2);
+    write_double(n);
 }
