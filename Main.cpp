@@ -94,9 +94,9 @@ inline int fread_unlocked() {
 inline int fwrite_unlocked() {
     return fwrite();
 }
-#elif defined  (_MSC_VER)// On Visual Studio
+#elif defined  (_MSC_VER) // On Visual Studio, use Microsoft Thread unsafe version
 inline int fread_unlocked(){
-    return _fread_nolock(); // use Microsoft Thread unsafe version
+    return _fread_nolock();
 }
 inline int fwrite_unlocked() {
     return _fwrite_nolock();
@@ -261,9 +261,9 @@ inline namespace Input {
     // https://stackoverflow.com/questions/60255516/istream-function-to-read-with-istream-parameter
     string all_lines(istream &in) {
         string ret;
-        char buffer[4096];
-        while (in.read(buffer, sizeof(buffer)))
-            ret.append(buffer, sizeof(buffer));
+        char buffer[BUF_SZ];
+        while (in.read(buffer, BUF_SZ))
+            ret.append(buffer, BUF_SZ);
         ret.append(buffer, in.gcount());
         return ret;
     }
@@ -340,12 +340,13 @@ inline namespace Output {
 
 int main() {
     ios_base::sync_with_stdio(0);
-    cin.sync_with_stdio(0);
     cin.tie(0);
 
 	init_output();
 	
-    double n = read_double();
-    n = round(n, 2);
-    write_double(n);
+    int n = read_int();
+    for (int i =0; i < n; i++){
+        int a = read_int(), b = read_int();
+        write_int(a + b);
+    }
 }
